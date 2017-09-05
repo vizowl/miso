@@ -1,11 +1,25 @@
-{ pkgs ? import <nixpkgs> {} }:
 let
-  result = import (pkgs.fetchFromGitHub {
-    owner = "dmjio";
-    repo = "miso";
-    sha256 = "13ckz11gbfs047hl3phj7h6fm59wsg9zw2fiqjaqkxmxv17zj5yj";
-    rev = "0834d5c0b309de24d836cbdcc25fd257de10be17";
-  }) {};
-in pkgs.haskell.packages.ghcjs.callPackage ./app.nix {
-  miso = result.miso-ghcjs;
-}
+  config = {
+    packageOverrides = pkgs: rec {
+      haskellPackages = pkgs.haskell.packages.ghcjs.override {
+        overrides = haskellPackagesNew: haskellPackagesOld: rec {
+          app =
+            haskellPackagesNew.callPackage ./app.nix { };
+
+          natural-transformation =
+            haskellPackagesNew.callPackage ./natural-transformation.nix { };
+
+          miso =
+            haskellPackagesNew.callPackage ./miso.nix { };
+
+        };
+      };
+    };
+  };
+
+  pkgs = import <nixpkgs> { inherit config; };
+
+in
+  { app = pkgs.haskellPackages.app;
+  }
+
